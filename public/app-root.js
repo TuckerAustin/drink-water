@@ -5,7 +5,8 @@ import { customElement, property, state } from 'lit/decorators.js';
 export class AppRoot extends LitElement {
 @state() ounces = 0;
 @state() reminderDuration = 0;
-@state() showNotifications = true;
+@state() timer = null;
+@state() remainingTime = 0;
 
   static get styles() {
     return css`
@@ -13,26 +14,28 @@ export class AppRoot extends LitElement {
         font-size: 4rem;
       }
 
-      .wrapper {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        height: 100vh;
-        background-color: #2196f3;
-        background: linear-gradient(315deg, #b4d2ea 0%, #2196f3 100%);
-        font-size: 24px;
-      }
-
       header {
         display: grid;
         justify-content: center;
-        padding: var(--sl-spacing-medium);
+        width: 100vw;
+        height: 100px;
         background-color: #2196f3;
         background: linear-gradient(315deg, #b4d2ea 0%, #2196f3 100%);
         color: white;
         font-size: var(--sl-font-size-xxxx-large);
         font-weight: var(--sl-font-weight-bold);
+      }
+
+      .wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        height: calc(100vh - 100px);
+        width: 100vw;
+        background-color: #2196f3;
+        background: linear-gradient(315deg, #b4d2ea 0%, #2196f3 100%);
+        font-size: 24px;
       }
 
       p {
@@ -41,7 +44,7 @@ export class AppRoot extends LitElement {
       }
 
       sl-icon {
-        color: #2196f3;
+        color: white;
       }
 
       sl-button {
@@ -73,6 +76,7 @@ export class AppRoot extends LitElement {
       this.notify();
     }, this.reminderDuration);
     this.toggleDrawer();
+    this.countdown();
   }
 
     notify() {
@@ -81,8 +85,28 @@ export class AppRoot extends LitElement {
       if (this.showNotifications) {
         this.reminder();
       } else {
-        this.notification = null;
+        this.clearNotification();
       };
+    }
+
+    // convert(mill) {
+    //   const minutes = Math.floor(mill / 60000);
+    //   const seconds = ((mill % 60000) / 1000).toFixed(0);
+    //   return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+    // }
+
+    countdown() {
+      // const seconds = Math.floor( (t/1000) % 60);
+      this.remainingTime = this.reminderDuration; //TODO convert to minutes
+      this.countdown = setInterval(() => {
+        this.remainingTime = this.seconds - 1000;
+      }, 1000);
+    }
+
+    clearNotification() {
+      this.notification = null;
+      clearTimeout(this.timer);
+      this.timer = null;
     }
     
 
@@ -101,7 +125,6 @@ export class AppRoot extends LitElement {
       })
     };
   };
-
 
   updateReminderDuration(e) {
     this.reminderDuration = e.target.value;
@@ -130,7 +153,8 @@ export class AppRoot extends LitElement {
           </sl-form>
           <sl-button @click="${this.toggleDrawer}" slot="footer" type="primary">Close</sl-button>
         </sl-drawer>
-        <sl-button @click="${this.toggleDrawer}">Setup Drink Reminder</sl-button>
+        ${this.timer ? html` <h2>${this.remainingTime}</h2> <sl-button type="danger" @click="${this.clearNotification}">Stop Drink Reminder</sl-button>
+        ` : html`<sl-button @click="${this.toggleDrawer}">Setup Drink Reminder</sl-button>`}
       </div>
     `;
   }
